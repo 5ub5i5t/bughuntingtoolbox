@@ -1,0 +1,36 @@
+services:
+  #db:
+  #  image: postgres
+  #  ports:
+  #    - "5432:5432"
+  #  environment:
+  #    POSTGRES_USER: postgres
+  #    POSTGRES_PASSWORD: postgres
+  #    POSTGRES_DB: postgres
+  backend:
+    build: backend/.
+    restart: always
+    ports:
+      - "8000:8000"
+      - "9080:9080"
+    #depends_on:
+    #  - db
+  frontend:
+    build: frontend/.
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - /app/node_modules
+      - ./frontend:/app
+    environment:
+      - WATCHPACK_POLLING=true
+    #depends_on:
+    #  - db
+    #  - backend
+  adminer:
+    image: adminer
+    #depends_on:
+     # - db
+    ports:
+      - "8088:8080"
