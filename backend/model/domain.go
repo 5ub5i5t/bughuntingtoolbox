@@ -10,14 +10,6 @@ import (
 
 type Domain struct {
 	gorm.Model
-	//ID uint `gorm:"primaryKey"`
-	//Target string `gorm:"type:text" json:"target"`
-	//Domain string `gorm:"type:text" json:"domain"`
-	//Target string `gorm:"UNIQUE_INDEX:compositeindex;type:text;not null;json:target"`
-	//Domain string `gorm:"UNIQUE_INDEX:compositeindex;type:text;not null;json:domain"`
-	//Target string `gorm:"UNIQUE_INDEX:compositeindex;type:text;not null" json:"target"`
-	//Domain string `gorm:"UNIQUE_INDEX:compositeindex;type:text;not null" json:"domain"`
-	// "index:idx_name,unique"
 	Target string `gorm:"index:idx_unique,unique" type:"text;not null" json:"target"`
 	Domain string `gorm:"index:idx_unique,unique" type:"text;not null" json:"domain"`
 }

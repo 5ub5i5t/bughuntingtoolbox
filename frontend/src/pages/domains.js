@@ -21,7 +21,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { fakeData, usStates } from './makeData';
+//import { fakeData, usStates } from './makeData';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
@@ -42,8 +42,11 @@ const DomainView = () => {
     download(csvConfig)(csv);
   };
 
-  const handleExportData = () => {
-    const csv = generateCsv(csvConfig)(fakeData);
+  const handleExportData = (rows) => {
+    //const csv = generateCsv(csvConfig)(fakeData);
+    //download(csvConfig)(csv);
+    const rowData = rows.map((row) => row.original);
+    const csv = generateCsv(csvConfig)(rowData);
     download(csvConfig)(csv);
   };
 
@@ -145,8 +148,8 @@ const DomainView = () => {
 
   //DELETE action
   const openDeleteConfirmModal = (row) => {
-    if (window.confirm('Are you sure you want to delete this record?')) {
-      deleteDomain(row.original.id);
+    if (window.confirm('Are you sure you want to delete this record [' + row.original.ID + ']?')) {
+      deleteDomain(row.original.ID);
     }
   };
 
@@ -242,14 +245,6 @@ const DomainView = () => {
           }}
         >
           Create New Domain
-        </Button>
-        <Button
-
-          //export all data that is currently in the table (ignore pagination, sorting, filtering, etc.)
-          onClick={handleExportData}
-          startIcon={<FileDownloadIcon />}
-        >
-          Export All Data
         </Button>
         <Button
           disabled={table.getPrePaginationRowModel().rows.length === 0}
@@ -351,10 +346,16 @@ function useGetDomains() {
 function useUpdateDomain() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (user) => {
-      //send api update request here
-      await new Promise((resolve) => setTimeout(resolve, 1000)); //fake api call
-      return Promise.resolve();
+    mutationFn: async (row) => {
+      console.log("Domain ID:" + row.ID);
+      try {
+        const response = await axios.put('http://localhost:8000/api/domain/update/' + row.ID, row);
+        console.log('Domain updated:', response.data);
+        return response;
+      } catch (error) {
+        console.error('Error updating domain:', error);
+      }
+
     },
     //client side optimistic update
     onMutate: (newDomainInfo) => {
@@ -374,8 +375,16 @@ function useDeleteDomain() {
   return useMutation({
     mutationFn: async (domainId) => {
       //send api update request here
-      await new Promise((resolve) => setTimeout(resolve, 1000)); //fake api call
-      return Promise.resolve();
+      //await new Promise((resolve) => setTimeout(resolve, 1000)); //fake api call
+      //return Promise.resolve();
+      console.log("Domain ID:" + domainId);
+      try {
+        const response = await axios.delete('http://localhost:8000/api/domain/delete/' + domainId);
+        console.log('Domain deleted:', response.data);
+        return response;
+      } catch (error) {
+        console.error('Error deleting domain:', error);
+      }
     },
     // client side optimistic update
     onMutate: (domainId) => {

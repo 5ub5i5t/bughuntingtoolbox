@@ -110,3 +110,69 @@ func StartProxy(context *gin.Context) {
 
 	log.Fatal(p.Start())
 }
+
+func StartProxyBasic() {
+	config := loadConfig()
+
+	if config.debug > 0 {
+		rawLog.SetFlags(rawLog.LstdFlags | rawLog.Lshortfile)
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(log.InfoLevel)
+	}
+	if config.debug == 2 {
+		log.SetReportCaller(true)
+	}
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
+
+	l, err := cert.NewPathLoader(config.certPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ca, err := cert.New(l)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	opts := &proxy.Options{
+		Debug:                 config.debug,
+		Addr:                  config.addr,
+		StreamLargeBodies:     1024 * 1024 * 5,
+		InsecureSkipVerifyTLS: config.ssl_insecure,
+		CA:                    ca,
+	}
+
+	p, err := proxy.NewProxy(opts)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if config.version {
+		fmt.Println("go-mitmproxy: " + p.Version)
+		os.Exit(0)
+	}
+
+	log.Infof("go-mitmproxy version %v\n", p.Version)
+
+	//p.AddAddon(&addon.LogAddon{})
+	//p.AddAddon(&custom.ChangeHtml{})
+	//p.AddAddon(web.NewWebAddon(config.webAddr))
+	p.AddAddon(&custom.CustomLogAddon{})
+	p.AddAddon(&custom.SaveFlowAddon{})
+	//p.AddAddon(&custom.CustomHttpxAddon{})
+
+	if config.dump != "" {
+		dumper := addon.NewDumperWithFilename(config.dump, config.dumpLevel)
+		p.AddAddon(dumper)
+	}
+
+	if config.mapperDir != "" {
+		mapper := addon.NewMapper(config.mapperDir)
+		p.AddAddon(mapper)
+	}
+
+	log.Fatal(p.Start())
+}

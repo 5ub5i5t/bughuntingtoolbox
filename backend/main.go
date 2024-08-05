@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -31,6 +30,8 @@ func loadEnv() {
 func loadDatabase() {
 	database.Connect()
 	database.Database.AutoMigrate(&model.Domain{})
+	//database.Database.AutoMigrate(&proxy.Flow{})
+	database.Database.AutoMigrate(&model.CustomFlow{})
 }
 
 func serveApplication() {
@@ -53,13 +54,17 @@ func serveApplication() {
 	domainRoutes := router.Group("/api/domain")
 	domainRoutes.GET("/:id", controller.GetDomainById)
 	domainRoutes.POST("/add", controller.AddDomain)
+	domainRoutes.PUT("/update/:id", controller.UpdateDomainById)
+	domainRoutes.DELETE("/delete/:id", controller.DeleteDomainById)
 
 	proxyRoutes := router.Group("/api/proxy")
 	proxyRoutes.GET("/start", mitmproxy.StartProxy)
 
+	go func() {
+		mitmproxy.StartProxyBasic()
+	}()
+
 	if err := router.Run(":8000"); err != nil {
 		panic(err)
 	}
-
-	fmt.Println("Server running on port 8000.")
 }
